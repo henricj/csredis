@@ -11,7 +11,7 @@ namespace CSRedis.Internal
 
         public RedisEncoding()
         {
-            Encoding = Encoding.UTF8;
+            Encoding = new UTF8Encoding(false);
         }
     }
 }
