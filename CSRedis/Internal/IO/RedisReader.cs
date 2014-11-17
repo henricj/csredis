@@ -8,6 +8,7 @@ namespace CSRedis.Internal.IO
     {
         readonly Stream _stream;
         readonly RedisEncoding _encoding;
+        readonly MemoryStream _lineBuffer = new MemoryStream();
 
         public RedisReader(RedisEncoding encoding, Stream stream)
         {
@@ -163,23 +164,25 @@ namespace CSRedis.Internal.IO
 
         string ReadLine()
         {
-             StringBuilder sb = new StringBuilder();
-            char c;
+            _lineBuffer.SetLength(0);
+
             bool should_break = false;
             while (true)
             {
-                 c = (char)_stream.ReadByte();
+                var b = _stream.ReadByte();
+                char c = (char)b;
                 if (c == '\r') // TODO: remove hardcoded
                     should_break = true;
                 else if (c == '\n' && should_break)
                     break;
                 else
                 {
-                    sb.Append(c);
+                    _lineBuffer.WriteByte((byte)b);
                     should_break = false;
                 }
             }
-            return sb.ToString();
+
+            return _encoding.Encoding.GetString(_lineBuffer.GetBuffer(), 0, (int)_lineBuffer.Length);
         }
 
         void ExpectBytesRead(long expecting, long actual)
